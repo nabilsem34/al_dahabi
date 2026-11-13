@@ -31,7 +31,7 @@ jobs:
       run: |
         rm -f android/local.properties
         
-        # Suppression radicale de la ligne Java Windows dans gradle.properties
+        # Nettoyage de gradle.properties
         python3 -c '
         import os
         gp_path = "android/gradle.properties"
@@ -50,17 +50,27 @@ jobs:
         echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
         echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.3-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
 
-        # Mettre à jour Kotlin vers une version compatible
+        # Remplacement agressif de Kotlin 1.4 par 1.8.22 dans tous les fichiers gradle et properties
         python3 -c '
         import glob, re
-        for filepath in glob.glob("android/**/build.gradle", recursive=True):
-            with open(filepath, "r") as f:
-                content = f.read()
-            content = content.replace("1.4.0", "1.8.22").replace("1.4.32", "1.8.22").replace("1.4.20", "1.8.22")
-            content = re.sub(r"kotlin_version\s*=\s*[\x27\x22]1\.[0-9](\.[0-9])?[\x27\x22]", "kotlin_version = \"1.8.22\"", content)
-            content = re.sub(r"kotlinVersion\s*=\s*[\x27\x22]1\.[0-9](\.[0-9])?[\x27\x22]", "kotlinVersion = \"1.8.22\"", content)
-            with open(filepath, "w") as f:
-                f.write(content)
+        for filepath in glob.glob("android/**/*", recursive=True):
+            if filepath.endswith((".gradle", ".properties", ".kts")):
+                try:
+                    with open(filepath, "r", encoding="utf-8") as f:
+                        content = f.read()
+                    
+                    # Remplace les blocs version "1.4..." ou kotlin_version = "1.4..."
+                    content = re.sub(r"version\s*[\x27\x22]1\.4(\.[0-9]+)?[\x27\x22]", "version \"1.8.22\"", content)
+                    content = re.sub(r"kotlin_version\s*=\s*[\x27\x22]1\.4(\.[0-9]+)?[\x27\x22]", "kotlin_version = \"1.8.22\"", content)
+                    content = re.sub(r"kotlinVersion\s*=\s*[\x27\x22]1\.4(\.[0-9]+)?[\x27\x22]", "kotlinVersion = \"1.8.22\"", content)
+                    
+                    # Remplacements directs au cas échéant
+                    content = content.replace("1.4.0", "1.8.22").replace("1.4.32", "1.8.22").replace("1.4.20", "1.8.22").replace("1.4.10", "1.8.22")
+                    
+                    with open(filepath, "w", encoding="utf-8") as f:
+                        f.write(content)
+                except Exception:
+                    pass
         '
       working-directory: al_dahabi
 
