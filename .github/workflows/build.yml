@@ -27,53 +27,11 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Total Clean and Force Kotlin 1.8.22
+    - name: Clean Windows Configs and Build Release
       run: |
         rm -f android/local.properties
-        
-        # Nettoyage de gradle.properties
-        python3 -c '
-        import os
-        gp_path = "android/gradle.properties"
-        if os.path.exists(gp_path):
-            with open(gp_path, "r") as f:
-                lines = f.readlines()
-            with open(gp_path, "w") as f:
-                for line in lines:
-                    if "org.gradle.java.home" not in line:
-                        f.write(line)
-        '
-        
-        # Forcer Gradle 7.6.3
-        mkdir -p android/gradle/wrapper
-        echo "distributionBase=GRADLE_USER_HOME" > android/gradle/wrapper/gradle-wrapper.properties
-        echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
-        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.3-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
-
-        # Éradication totale et forcée de Kotlin 1.4 dans TOUS les fichiers gradle/properties
-        python3 -c '
-        import glob, re
-        for filepath in glob.glob("android/**/*", recursive=True):
-            if filepath.endswith((".gradle", ".gradle.kts", ".properties")):
-                try:
-                    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                        content = f.read()
-                    
-                    # Remplace n'\''importe quelle version 1.4.x par 1.8.22
-                    content = re.sub(r"1\.4\.[0-9]+", "1.8.22", content)
-                    content = re.sub(r"[\x27\x22]1\.4[\x27\x22]", "\"1.8.22\"", content)
-                    content = re.sub(r"kotlin_version\s*=\s*[^\n]+", "kotlin_version = \"1.8.22\"", content)
-                    content = re.sub(r"kotlinVersion\s*=\s*[^\n]+", "kotlinVersion = \"1.8.22\"", content)
-                    
-                    with open(filepath, "w", encoding="utf-8") as f:
-                        f.write(content)
-                except Exception:
-                    pass
-        '
-      working-directory: al_dahabi
-
-    - name: Build APK Release
-      run: flutter build apk --release
+        rm -f android/gradle.properties
+        flutter build apk --release
       working-directory: al_dahabi
 
     - name: Upload APK Artifact
