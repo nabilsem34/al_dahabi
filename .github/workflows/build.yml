@@ -27,7 +27,7 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Force Clean Windows Paths and Update Configs
+    - name: Total Clean and Force Kotlin 1.8.22
       run: |
         rm -f android/local.properties
         
@@ -50,22 +50,20 @@ jobs:
         echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
         echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.3-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
 
-        # Remplacement agressif de Kotlin 1.4 par 1.8.22 dans tous les fichiers gradle et properties
+        # Éradication totale et forcée de Kotlin 1.4 dans TOUS les fichiers gradle/properties
         python3 -c '
         import glob, re
         for filepath in glob.glob("android/**/*", recursive=True):
-            if filepath.endswith((".gradle", ".properties", ".kts")):
+            if filepath.endswith((".gradle", ".gradle.kts", ".properties")):
                 try:
-                    with open(filepath, "r", encoding="utf-8") as f:
+                    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                         content = f.read()
                     
-                    # Remplace les blocs version "1.4..." ou kotlin_version = "1.4..."
-                    content = re.sub(r"version\s*[\x27\x22]1\.4(\.[0-9]+)?[\x27\x22]", "version \"1.8.22\"", content)
-                    content = re.sub(r"kotlin_version\s*=\s*[\x27\x22]1\.4(\.[0-9]+)?[\x27\x22]", "kotlin_version = \"1.8.22\"", content)
-                    content = re.sub(r"kotlinVersion\s*=\s*[\x27\x22]1\.4(\.[0-9]+)?[\x27\x22]", "kotlinVersion = \"1.8.22\"", content)
-                    
-                    # Remplacements directs au cas échéant
-                    content = content.replace("1.4.0", "1.8.22").replace("1.4.32", "1.8.22").replace("1.4.20", "1.8.22").replace("1.4.10", "1.8.22")
+                    # Remplace n'\''importe quelle version 1.4.x par 1.8.22
+                    content = re.sub(r"1\.4\.[0-9]+", "1.8.22", content)
+                    content = re.sub(r"[\x27\x22]1\.4[\x27\x22]", "\"1.8.22\"", content)
+                    content = re.sub(r"kotlin_version\s*=\s*[^\n]+", "kotlin_version = \"1.8.22\"", content)
+                    content = re.sub(r"kotlinVersion\s*=\s*[^\n]+", "kotlinVersion = \"1.8.22\"", content)
                     
                     with open(filepath, "w", encoding="utf-8") as f:
                         f.write(content)
