@@ -27,23 +27,26 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Neutralize Windows Path and Force Gradle 7.6.3
+    - name: Global and Local Gradle Cleanup
       run: |
-        rm -f android/local.properties
+        # 1. Supprimer le fichier global gradle.properties du runner qui injecte ce chemin Windows
+        rm -f ~/.gradle/gradle.properties
         
-        # Script Python pour supprimer définitivement la ligne Java Windows du fichier gradle.properties
+        # 2. Nettoyer le fichier local du projet de toute référence à java.home
+        rm -f android/local.properties
         python3 -c '
         import os
         path = "android/gradle.properties"
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                lines = f.readlines()
-            new_lines = [l for l in lines if "org.gradle.java.home" not in l]
+                content = f.read()
+            lines = content.splitlines()
+            clean_lines = [l for l in lines if "java.home" not in l]
             with open(path, "w", encoding="utf-8") as f:
-                f.writelines(new_lines)
+                f.write("\n".join(clean_lines) + "\n")
         '
         
-        # Forcer proprement Gradle 7.6.3
+        # 3. Forcer proprement Gradle 7.6.3
         mkdir -p android/gradle/wrapper
         cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
         distributionBase=GRADLE_USER_HOME
