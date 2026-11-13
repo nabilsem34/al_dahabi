@@ -27,8 +27,12 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Remove local.properties
-      run: rm -f android/local.properties
+    - name: Fix Gradle Properties
+      run: |
+        rm -f android/local.properties
+        if [ -f android/gradle.properties ]; then
+          sed -i '/org.gradle.java.home/d' android/gradle.properties
+        fi
       working-directory: al_dahabi
 
     - name: Build APK Release
