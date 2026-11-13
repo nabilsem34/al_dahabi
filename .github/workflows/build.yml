@@ -27,25 +27,8 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Nuke Gradle Cache and Build Release
-      run: |
-        # Suppression définitive de tous les caches Gradle et de build corrompus
-        rm -rf .gradle
-        rm -rf android/.gradle
-        rm -rf android/app/.gradle
-        rm -rf build
-        
-        # Recréation propre du wrapper Gradle pour forcer la bonne version
-        mkdir -p android/gradle/wrapper
-        cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
-        distributionBase=GRADLE_USER_HOME
-        distributionPath=wrapper/dists
-        distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.3-bin.zip
-        zipStoreBase=GRADLE_USER_HOME
-        zipStorePath=wrapper/dists
-        EOF
-        
-        flutter build apk --release --verbose
+    - name: Build APK Release
+      run: flutter build apk --release
       working-directory: al_dahabi
 
     - name: Upload APK Artifact
