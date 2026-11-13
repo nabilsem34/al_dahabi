@@ -27,22 +27,36 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Fix Gradle Version and Kotlin
+    - name: Force Clean Windows Paths and Update Configs
       run: |
         rm -f android/local.properties
+        
+        # Suppression radicale de la ligne Java Windows dans gradle.properties
+        python3 -c '
+        import os
+        gp_path = "android/gradle.properties"
+        if os.path.exists(gp_path):
+            with open(gp_path, "r") as f:
+                lines = f.readlines()
+            with open(gp_path, "w") as f:
+                for line in lines:
+                    if "org.gradle.java.home" not in line:
+                        f.write(line)
+        '
+        
+        # Forcer Gradle 7.6.3
         mkdir -p android/gradle/wrapper
         echo "distributionBase=GRADLE_USER_HOME" > android/gradle/wrapper/gradle-wrapper.properties
         echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
         echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.3-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
-        
-        # Mise à jour automatique de Kotlin 1.4 vers 1.8.22 dans les fichiers build.gradle
+
+        # Mettre à jour Kotlin vers une version compatible
         python3 -c '
-        import glob
+        import glob, re
         for filepath in glob.glob("android/**/build.gradle", recursive=True):
             with open(filepath, "r") as f:
                 content = f.read()
             content = content.replace("1.4.0", "1.8.22").replace("1.4.32", "1.8.22").replace("1.4.20", "1.8.22")
-            import re
             content = re.sub(r"kotlin_version\s*=\s*[\x27\x22]1\.[0-9](\.[0-9])?[\x27\x22]", "kotlin_version = \"1.8.22\"", content)
             content = re.sub(r"kotlinVersion\s*=\s*[\x27\x22]1\.[0-9](\.[0-9])?[\x27\x22]", "kotlinVersion = \"1.8.22\"", content)
             with open(filepath, "w") as f:
