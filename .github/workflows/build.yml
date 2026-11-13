@@ -27,38 +27,8 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Global and Local Gradle Cleanup
-      run: |
-        # 1. Supprimer le fichier global gradle.properties du runner qui injecte ce chemin Windows
-        rm -f ~/.gradle/gradle.properties
-        
-        # 2. Nettoyer le fichier local du projet de toute référence à java.home
-        rm -f android/local.properties
-        python3 -c '
-        import os
-        path = "android/gradle.properties"
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read()
-            lines = content.splitlines()
-            clean_lines = [l for l in lines if "java.home" not in l]
-            with open(path, "w", encoding="utf-8") as f:
-                f.write("\n".join(clean_lines) + "\n")
-        '
-        
-        # 3. Forcer proprement Gradle 7.6.3
-        mkdir -p android/gradle/wrapper
-        cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
-        distributionBase=GRADLE_USER_HOME
-        distributionPath=wrapper/dists
-        distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.3-bin.zip
-        zipStoreBase=GRADLE_USER_HOME
-        zipStorePath=wrapper/dists
-        EOF
-      working-directory: al_dahabi
-
-    - name: Build APK Release
-      run: flutter build apk --release
+    - name: Build APK Release with Logs
+      run: flutter build apk --release --verbose
       working-directory: al_dahabi
 
     - name: Upload APK Artifact
