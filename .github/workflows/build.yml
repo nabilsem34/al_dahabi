@@ -27,11 +27,12 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Fix Gradle Version and Properties
+    - name: Clean Windows Java Home Path
       run: |
         rm -f android/local.properties
-        if [ -f android/gradle/wrapper/gradle-wrapper.properties ]; then
-          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-7.6.3-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties
+        if [ -f android/gradle.properties ]; then
+          grep -v "org.gradle.java.home" android/gradle.properties > android/gradle.properties.tmp
+          mv android/gradle.properties.tmp android/gradle.properties
         fi
       working-directory: al_dahabi
 
