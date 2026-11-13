@@ -27,11 +27,11 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Fix Gradle Properties
+    - name: Fix Gradle Version and Properties
       run: |
         rm -f android/local.properties
-        if [ -f android/gradle.properties ]; then
-          sed -i '/org.gradle.java.home/d' android/gradle.properties
+        if [ -f android/gradle/wrapper/gradle-wrapper.properties ]; then
+          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-7.6.3-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties
         fi
       working-directory: al_dahabi
 
