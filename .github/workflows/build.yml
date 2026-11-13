@@ -27,17 +27,27 @@ jobs:
       run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Force Gradle 7.6.3 and Clean Properties
+    - name: Fix Gradle Version and Kotlin
       run: |
         rm -f android/local.properties
         mkdir -p android/gradle/wrapper
         echo "distributionBase=GRADLE_USER_HOME" > android/gradle/wrapper/gradle-wrapper.properties
         echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
         echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.3-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
-        if [ -f android/gradle.properties ]; then
-          grep -v "org.gradle.java.home" android/gradle.properties > android/gradle.properties.tmp
-          mv android/gradle.properties.tmp android/gradle.properties
-        fi
+        
+        # Mise à jour automatique de Kotlin 1.4 vers 1.8.22 dans les fichiers build.gradle
+        python3 -c '
+        import glob
+        for filepath in glob.glob("android/**/build.gradle", recursive=True):
+            with open(filepath, "r") as f:
+                content = f.read()
+            content = content.replace("1.4.0", "1.8.22").replace("1.4.32", "1.8.22").replace("1.4.20", "1.8.22")
+            import re
+            content = re.sub(r"kotlin_version\s*=\s*[\x27\x22]1\.[0-9](\.[0-9])?[\x27\x22]", "kotlin_version = \"1.8.22\"", content)
+            content = re.sub(r"kotlinVersion\s*=\s*[\x27\x22]1\.[0-9](\.[0-9])?[\x27\x22]", "kotlinVersion = \"1.8.22\"", content)
+            with open(filepath, "w") as f:
+                f.write(content)
+        '
       working-directory: al_dahabi
 
     - name: Build APK Release
