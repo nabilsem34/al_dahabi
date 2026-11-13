@@ -23,15 +23,27 @@ jobs:
         flutter-version: '3.x'
         channel: 'stable'
 
-    - name: Install Dependencies and Clean
-      run: |
-        flutter pub get
-        flutter clean
+    - name: Install Dependencies
+      run: flutter pub get
       working-directory: al_dahabi
 
-    - name: Force Gradle 7.6.3 Wrapper
+    - name: Neutralize Windows Path and Force Gradle 7.6.3
       run: |
         rm -f android/local.properties
+        
+        # Script Python pour supprimer définitivement la ligne Java Windows du fichier gradle.properties
+        python3 -c '
+        import os
+        path = "android/gradle.properties"
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                lines = f.readlines()
+            new_lines = [l for l in lines if "org.gradle.java.home" not in l]
+            with open(path, "w", encoding="utf-8") as f:
+                f.writelines(new_lines)
+        '
+        
+        # Forcer proprement Gradle 7.6.3
         mkdir -p android/gradle/wrapper
         cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
         distributionBase=GRADLE_USER_HOME
